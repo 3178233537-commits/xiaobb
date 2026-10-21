@@ -30,7 +30,9 @@
 
 ```text
 ./
-├─ medical/                 # 前端应用（index.html + css/ + js/）
+├─ index.html               # 既有前端演示页入口（非本系统，仅归档）
+├─ css/ js/                 # 既有前端演示页资源（非本系统，仅归档）
+├─ medical/                 # 本系统前端应用（index.html + css/ + js/）
 │  ├─ index.html
 │  ├─ css/style.css         # 适老化设计系统
 │  ├─ js/data.js            # 量表与计分规则配置（单一数据源）
@@ -65,7 +67,7 @@
 - 禁止使用 `codex/xx`、`claude/xxx` 作为分支前缀。
 - 功能分支测试通过后必须合并回本地 `dev` 并删除，避免分支堆积。
 - 仅当功能分支已完整合并、测试通过、工作区干净时，才允许推送远程 `dev`；否则禁止推送。
-- 本机 git 未安装，首次使用前执行 `scripts/git-setup.ps1`（由人工运行）。
+- 本机 Git 已安装（`C:\Program Files\Git\cmd`，v2.56.0）并已加入用户 PATH；`dev` 基线已建立（提交 `ef84bbb`），无需重复执行 `scripts/git-setup.ps1`。
 
 ## 生产部署与访问边界
 
