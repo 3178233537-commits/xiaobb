@@ -22,9 +22,28 @@
 
 ## 技术栈（现状与偏差）
 
-- 现状：原生 HTML5 + CSS3 + ES5 风格 JavaScript，无构建、无依赖。
-- 上游参考平台为 FastAPI + Next.js + Tailwind，本项目未采用，原因与决策见
+- 现状：原生 HTML5 + CSS3 + ES5 风格 JavaScript，无构建、无依赖，`localStorage` 持久化。
+- 上游参考平台为 FastAPI + Next.js + PostgreSQL + Redis + Tailwind，本项目未采用，原因与决策见
   `docs/review/预问诊系统-合规审查记录.md` 第三节。若后续迁移，必须先走约定 6 的确认流程。
+
+## 数据模型概览
+
+- 当前运行时数据存储在浏览器 `localStorage`（三份：`CGA_DRAFT_V1` 草稿 / `CGA_RECORDS_V1` 记录 / `CGA_PREF_V1` 偏好），为演示级方案。
+- 数据库设计已完成，详见 `docs/sql/数据库表业务设计.md`：4 大业务域（用户域 / 量表配置域 / 评估执行域 / 报告域）、11 张核心表、统一字段规范、JSON 规则表达式抽象阈值判定。
+- 量表配置硬编码在 `medical/js/data.js` 中（单一数据源），共 24 题筛查 + 14 张深度量表 + 触发规则 + 阈值判定函数。
+- 计分引擎在 `medical/js/app.js` 中（`scaleResult` / `computeAll` / `screeningResults`），将 `judge(tot, answers, info)` JS 函数硬编码执行。
+
+## 项目文档导航
+
+| 文档 | 位置 | 用途 |
+|---|---|---|
+| 项目构想总需求 | `docs/项目构想总需求.md` | 13 节完整需求，含架构图、流程图、数据模型 |
+| 数据库表业务设计 | `docs/sql/数据库表业务设计.md` | 11 张表逐表设计、统一字段、ER 图、规则表达式示例 |
+| 预问诊系统-开发计划 | `docs/plan/预问诊系统-开发计划.md` | 一期纯前端实现计划 |
+| 任务二-技术栈选择与数据库设计 | `docs/plan/任务二-技术栈选择与数据库设计.md` | 本任务执行计划（方案 A 确认） |
+| 预问诊系统-合规审查记录 | `docs/review/预问诊系统-合规审查记录.md` | 技术栈偏差决策依据 |
+| 预问诊系统-缺陷记录 | `docs/bug/预问诊系统-缺陷记录.md` | 已修复 Bug 归档 |
+| WS/T 888 原文 | `medical/_docx_原文.txt` | 187 段行业标准原文 |
 
 ## 目录结构
 
@@ -36,13 +55,17 @@
 │  ├─ index.html
 │  ├─ css/style.css         # 适老化设计系统
 │  ├─ js/data.js            # 量表与计分规则配置（单一数据源）
-│  └─ js/app.js             # 向导状态机、计分、语音、报告
+│  ├─ js/app.js             # 向导状态机、计分、语音、报告
+│  ├─ _docx_原文.txt         # WS/T 888—2026 需求原文（187 段）
+│  └─ _extract_docx.py
 ├─ tests/                   # 测试
 │  └─ medical-flow.test.js  # 无头端到端测试（76 项断言）
 ├─ docs/
 │  ├─ plan/                 # 开发计划
 │  ├─ review/               # 审查记录
-│  └─ bug/                  # 缺陷记录
+│  ├─ bug/                  # 缺陷记录
+│  ├─ sql/                  # 数据库表设计方案
+│  └─ 项目构想总需求.md       # 13 节完整需求文档
 ├─ scripts/                 # 运维/规范脚本
 │  └─ git-setup.ps1
 ├─ AGENTS.md
