@@ -13,7 +13,7 @@
 
 1. 命令环境：Windows-11，必须使用 Windows PowerShell 执行命令。
 2. Git 规范：遵守本文档《Git 规范》。
-3. 外部依赖：本机无 git、无 Docker，如遇缺失依赖及时呼叫人类，不要自行下载，不要陷入死循环执行。
+3. 外部依赖：Docker、PostgreSQL、Redis 等后端组件本机未装，如遇缺失依赖及时呼叫人类，不要自行下载，不要陷入死循环执行。Git v2.56.0 已在 PATH 中，可直接使用。
 4. 文件编码：始终使用 UTF-8（无 BOM）。
 5. 任务执行前先回复：`bro.`
 6. **禁止直接开发**：接到新需求时先阅读相关代码、评估可行性、给出意见（可以反驳），与用户充分讨论并确认方案，再写计划文档，最后才编码。
@@ -23,8 +23,33 @@
 ## 技术栈（现状与偏差）
 
 - 现状：原生 HTML5 + CSS3 + ES5 风格 JavaScript，无构建、无依赖，`localStorage` 持久化。
+- 运行环境：浏览器（Chrome/Edge 最新版，支持 speechSynthesis zh-CN）+ Node.js v18+（用于跑测试脚本）。
 - 上游参考平台为 FastAPI + Next.js + PostgreSQL + Redis + Tailwind，本项目未采用，原因与决策见
   `docs/review/预问诊系统-合规审查记录.md` 第三节。若后续迁移，必须先走约定 6 的确认流程。
+
+## 快速启动（一期无构建）
+
+- 预览页面：直接用浏览器打开 `medical/index.html`（`file://` 协议即可，无需启静态服务器）。
+- 运行测试：`node tests/medical-flow.test.js`（76 项断言，修改 `medical/js/` 后必须跑）。
+- 本机缺失 Docker/PostgreSQL/Redis 等后端组件时呼叫人类，禁止自行下载。
+
+## 代码硬性约束
+
+修改 `medical/js/data.js` 或 `medical/js/app.js` 时，以下规则违反即出错：
+
+1. **量表 t 字段必须用语义化短名**：`deepScales` 对象的 key 和筛查题 `t` 数组一律用 `adl`、`nrs2002`、`athens` 等短名。WS/T 888 编码（`B.1`、`B.18`）只存在于每个量表内部的 `code` 属性，禁止在 `t` 字段或触发逻辑中混用 B.xx 编码。
+2. **深度量表必须有三个核心属性**：新增量表必须同时具备 `code`（WS/T 888 编码）、`items`（题目数组）、`judge`（判定函数）。特殊的 `yesNo: true` 量表（如 home14）不需要 `options`。
+3. **XSS 防护**：禁止用 `innerHTML` 拼接来自 `answers` 对象或 `localStorage` 的用户数据（老人姓名、代填角色、自定义输入等）。渲染用户数据必须用 `textContent`。
+4. **修改量表后必须同步测试**：改了 `data.js` 任何量表定义、阈值、触发规则，必须同步修改 `tests/medical-flow.test.js` 中对应的断言并全部通过。
+5. **NRS2002 条件条目必须用 display:none 控制**：初筛 n1–n4 任一答"是"才显示终筛 n5/n6。渲染时始终渲染 DOM，用 `showIf` 函数判定显隐后设 `display`，禁止重建 DOM。
+
+## 项目特有易错点
+
+- **居家环境量表是/否型**：`home14` 量表设置了 `yesNo: true`，无 `options` 数组。渲染时检查 `yesNo` 属性，自动生成"是/否"两按钮。答"否"代表存在隐患（与其他量表相反）。
+- **FRAIL 衰弱计数是独立逻辑**：筛查第 6 节 5 道是/否题（q14–q18），判定规则是"yes 条目数 ≥ 3 → 衰弱"。在 `app.js` 的 `frailJudge` 函数中，独立于各量表 `judge` 函数执行。
+- **报告打印样式同步**：报告 DOM 修改后必须同步检查 `@media print` 中的样式（适老化字号 20/23/26px 打印后必须可读）。
+- **q21 多重用药无触发量表**：nutrition 分节第 3 题（"目前是否同时服用 5 种以上药物"）无 `t` 字段，不触发任何深度量表。该题答案仅作为报告中"多重用药提醒"的 flag。
+- **编码约定**：本文档描述规格时统一用 WS/T 888 编码（B.1、B.18）；`medical/js/data.js` 实现中 `t` 字段和 `deepScales` key 用语义化短名（`adl`、`nrs2002`），每个量表内部 `code` 字段持有 WS/T 888 编码作为映射。
 
 ## 数据模型概览
 
